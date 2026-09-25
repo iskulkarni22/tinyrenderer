@@ -1,3 +1,6 @@
+#ifndef MODEL_H
+#define MODEL_H
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -52,3 +55,6 @@ bool model::read_obj_file(std::string filepath) {
     read.close();
     return true;
 }
+
+
+#endif

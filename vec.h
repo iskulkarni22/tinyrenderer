@@ -28,24 +28,24 @@ class vec2 {
         }
 };
 
-std::ostream& operator<<(std::ostream& out, const vec2& a) {
+inline std::ostream& operator<<(std::ostream& out, const vec2& a) {
     out << '<' << a.x() << ", " << a.y() << '>';
     return out;
 }
 
-vec2 operator+(const vec2& a, const vec2& b) {
+inline vec2 operator+(const vec2& a, const vec2& b) {
     return vec2(a.x() + b.x(), a.y() + b.y());
 }
 
-vec2 operator-(const vec2& a, const vec2& b) {
+inline vec2 operator-(const vec2& a, const vec2& b) {
     return vec2(a.x() - b.x(), a.y() - b.y());
 }
 
-vec2 operator*(const vec2& a, const vec2& b) {
+inline vec2 operator*(const vec2& a, const vec2& b) {
     return vec2(a.x() * b.x(), a.y() * b.y());
 }
 
-vec2 operator/(const vec2& a, const vec2& b) {
+inline vec2 operator/(const vec2& a, const vec2& b) {
     return vec2(a.x() / b.x(), a.y() / b.y());
 }
 
@@ -81,41 +81,41 @@ class vec3 {
         }
 };
 
-std::ostream& operator<<(std::ostream& out, const vec3& a) {
+inline std::ostream& operator<<(std::ostream& out, const vec3& a) {
     out << '<' << a.x() << ", " << a.y() << ", " << a.z() << '>';
     return out;
 }
 
-vec3 operator+(const vec3& a, const vec3& b) {
+inline vec3 operator+(const vec3& a, const vec3& b) {
     return vec3(a.x() + b.x(), a.y() + b.y(), a.z() + b.z());
 }
 
-vec3 operator-(const vec3& a, const vec3& b) {
+inline vec3 operator-(const vec3& a, const vec3& b) {
     return vec3(a.x() - b.x(), a.y() - b.y(), a.z() - b.z());
 }
 
-vec3 operator*(const vec3& a, const vec3& b) {
+inline vec3 operator*(const vec3& a, const vec3& b) {
     return vec3(a.x() * b.x(), a.y() * b.y(), a.z() * b.z());
 }
 
-vec3 operator*(const vec3& a, double b) {
+inline vec3 operator*(const vec3& a, double b) {
     return vec3(a.x() * b, a.y() * b, a.z() * b);
 }
 
-vec3 operator/(const vec3& a, const vec3& b) {
+inline vec3 operator/(const vec3& a, const vec3& b) {
     return vec3(a.x() / b.x(), a.y() / b.y(), a.z() / b.z());
 }
 
-vec3 operator/(const vec3& a, double b) {
+inline vec3 operator/(const vec3& a, double b) {
     return a * (1/b);
 }
 
-double norm(const vec3& a) {
+inline double norm(const vec3& a) {
     vec3 squared = a*a;
     return sqrt(squared.x()) + sqrt(squared.y()) + sqrt(squared.z());
 }
 
-vec3 normalized(const vec3& a) {
+inline vec3 normalized(const vec3& a) {
     return a / norm(a);
 }
 
@@ -139,6 +139,7 @@ class vec4 {
         double w() const { return data[3]; }
 
         const vec2 xy() const { return vec2(x(), y()); }
+        const vec3 xyz() const { return vec3(x(), y(), z()); }
 
         const double length() const {
             return sqrt(x()*x() + y()*y() + z()*z());
@@ -149,32 +150,32 @@ class vec4 {
         }
 };
 
-std::ostream& operator<<(std::ostream& out, const vec4& a) {
+inline std::ostream& operator<<(std::ostream& out, const vec4& a) {
     out << '<' << a.x() << ", " << a.y() << ", " << a.z() << ", " << a.w() << '>';
     return out;
 }
 
-vec4 operator+(const vec4& a, const vec4& b) {
+inline vec4 operator+(const vec4& a, const vec4& b) {
     return vec4(a.x() + b.x(), a.y() + b.y(), a.z() + b.z(), a.w() + b.w());
 }
 
-vec4 operator-(const vec4& a, const vec4& b) {
+inline vec4 operator-(const vec4& a, const vec4& b) {
     return vec4(a.x() - b.x(), a.y() - b.y(), a.z() - b.z(), a.w() - b.w());
 }
 
-vec4 operator*(const vec4& a, const vec4& b) {
+inline vec4 operator*(const vec4& a, const vec4& b) {
     return vec4(a.x() * b.x(), a.y() * b.y(), a.z() * b.z(), a.w() * b.w());
 }
 
-vec4 operator*(const vec4& a, double b) {
+inline vec4 operator*(const vec4& a, double b) {
     return vec4(a.x() * b, a.y() * b, a.z() * b, a.w() * b);
 }
 
-vec4 operator/(const vec4& a, const vec4& b) {
+inline vec4 operator/(const vec4& a, const vec4& b) {
     return vec4(a.x() / b.x(), a.y() / b.y(), a.z() / b.z(), a.w() / b.w());
 }
 
-vec4 operator/(const vec4& a, double b) {
+inline vec4 operator/(const vec4& a, double b) {
     return a * (1/b);
 }
 
