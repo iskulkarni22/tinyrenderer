@@ -129,6 +129,16 @@ class matrix4 {
         
         matrix4() = default;
 
+        operator matrix3() const {
+            matrix3 res;
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    res[i][j] = data[i][j];
+                }
+            }
+            return res;
+        }
+
         const vec4& operator[](const int i) const { return data[i]; }
         vec4& operator[](const int i) { return data[i]; }
 };

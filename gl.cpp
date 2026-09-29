@@ -38,6 +38,13 @@ void init_zbuffer(const int width, const int height) {
     zbuffer = std::vector<double>(width*height, -std::numeric_limits<double>::infinity());
 }
 
+vec3 surface_norm(const vec3 tri[3]) {
+    vec3 ab = tri[1] - tri[0];
+    vec3 ac = tri[2] - tri[0];
+    vec3 cross = ab.cross(ac);
+    return normalized(cross);
+}
+
 void rasterize(TGAImage& fb, const Triangle& clip, const IShader& shader) {
     vec4 ndc[3] = {clip[0]/clip[0].w(), clip[1]/clip[1].w(), clip[2]/clip[2].w()};
     vec2 screen[3] = {(Viewport*ndc[0]).xy(), (Viewport*ndc[1]).xy(), (Viewport*ndc[2]).xy()};
@@ -62,7 +69,7 @@ void rasterize(TGAImage& fb, const Triangle& clip, const IShader& shader) {
             double z = bc.dot(vec3{ndc[0].z(), ndc[1].z(), ndc[2].z()});
             if (z <= zbuffer[x+y*fb.width()]) continue;
 
-            auto [discard, color] = shader.fragment(bc);
+            auto [discard, color] = shader.frag(bc);
             if (discard) continue;
             
             zbuffer[x+y*fb.width()] = z;

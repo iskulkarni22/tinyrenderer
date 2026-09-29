@@ -8,14 +8,29 @@
 
 
 struct face {
-    face(const int v1, const int v2, const int v3) : vertex_idx{v1, v2, v3} {}
+    face(const int v[3], const int vt[3], const int vn[3]) {
+        for (int i : {0,1,2}) {
+            vertex_idx[i] = v[i];
+            vtex_idx[i] = vt[i];
+            vnrm_idx[i] = vn[i];
+        }
+    }
     
     int vertex_idx[3];
+    int vtex_idx[3];
+    int vnrm_idx[3];
 };
 
 struct model {
     std::vector<vertex> vertices;
     std::vector<face> faces;
+    std::vector<vec3> vnormals;
+    std::vector<vec2> texcoords;
+    TGAImage normal_map;
+    TGAImage diffuse_map;
+    TGAImage specular_map;
+
+    vec4 normal(const vec2& uv) const;
 
     bool read_obj_file(std::string filepath);
 };
@@ -38,22 +53,48 @@ bool model::read_obj_file(std::string filepath) {
             ss >> x >> y >> z;
             vertex v(x, y, z);
             vertices.push_back(v);
+        } else if (type == "vt") {
+            double x, y, w;
+            ss >> x >> y >> w;
+            vec2 texcoord(x, 1-y);
+            texcoords.push_back(texcoord);
+        } else if (type == "vn") {
+            double x, y, z;
+            ss >> x >> y >> z;
+            vec3 vnrm(x, y, z);
+            vnormals.push_back(vnrm);
         } else if (type == "f") {
-            std::string v1, v2, v3;
-            ss >> v1 >> v2 >> v3;
+            int v[3];
+            int vt[3];
+            int vn[3];
 
-            int v1_idx, v2_idx, v3_idx;
-            v1_idx = std::stoi(v1.substr(0, v1.find("/"))) - 1;
-            v2_idx = std::stoi(v2.substr(0, v2.find("/"))) - 1;
-            v3_idx = std::stoi(v3.substr(0, v3.find("/"))) - 1;
+            char delim;
+            int vert, vtex, vnrm;
+            int i = 0;
+            while (ss >> vert >> delim >> vtex >> delim >> vnrm) {
+                v[i] = vert-1;
+                vt[i] = vtex-1;
+                vn[i] = vnrm-1;
+                i++;
+            }
 
-            face f(v1_idx, v2_idx, v3_idx);
+            face f{v, vt, vn};
             faces.push_back(f);
         }
     }
 
     read.close();
+
+    normal_map.read_tga_file(filepath.substr(0, filepath.find(".")) + "_nm.tga");
+    diffuse_map.read_tga_file(filepath.substr(0, filepath.find(".")) + "_diff.tga");
+    specular_map.read_tga_file(filepath.substr(0, filepath.find(".")) + "_spec.tga");
+
     return true;
+}
+
+vec4 model::normal(const vec2& uv) const {
+    TGAColor c = normal_map.get(uv[0] * normal_map.width(), uv[1] * normal_map.height());
+    return vec4((double)c[2], (double)c[1], (double)c[0], 0)*2./255. - vec4(1,1,1,0);
 }
 
 

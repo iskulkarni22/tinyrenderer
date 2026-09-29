@@ -45,6 +45,14 @@ inline vec2 operator*(const vec2& a, const vec2& b) {
     return vec2(a.x() * b.x(), a.y() * b.y());
 }
 
+inline vec2 operator*(const vec2& a, const double b) {
+    return vec2(a.x() * b, a.y() * b);
+}
+
+inline vec2 operator*(const double b, const vec2& a) {
+    return a * b;
+}
+
 inline vec2 operator/(const vec2& a, const vec2& b) {
     return vec2(a.x() / b.x(), a.y() / b.y());
 }
@@ -102,6 +110,11 @@ inline vec3 operator*(const vec3& a, double b) {
     return vec3(a.x() * b, a.y() * b, a.z() * b);
 }
 
+
+inline vec3 operator*(double b, const vec3& a) {
+    return a * b;
+}
+
 inline vec3 operator/(const vec3& a, const vec3& b) {
     return vec3(a.x() / b.x(), a.y() / b.y(), a.z() / b.z());
 }
@@ -127,6 +140,8 @@ class vec4 {
         double data[4] = {0., 0., 0., 0.};
     public:
         vec4(double x, double y, double z, double w) : data{x,y,z,w} {}
+
+        vec4(const vec3& v, double w) : data{v.x(), v.y(), v.z(), w} {}
 
         vec4() = default;
 
@@ -167,8 +182,12 @@ inline vec4 operator*(const vec4& a, const vec4& b) {
     return vec4(a.x() * b.x(), a.y() * b.y(), a.z() * b.z(), a.w() * b.w());
 }
 
-inline vec4 operator*(const vec4& a, double b) {
+inline vec4 operator*(const vec4& a, const double b) {
     return vec4(a.x() * b, a.y() * b, a.z() * b, a.w() * b);
+}
+
+inline vec4 operator*(const double b, const vec4& a) {
+    return a * b;
 }
 
 inline vec4 operator/(const vec4& a, const vec4& b) {
@@ -177,6 +196,15 @@ inline vec4 operator/(const vec4& a, const vec4& b) {
 
 inline vec4 operator/(const vec4& a, double b) {
     return a * (1/b);
+}
+
+inline double norm(const vec4& a) {
+    vec4 squared = a*a;
+    return sqrt(squared.x()) + sqrt(squared.y()) + sqrt(squared.z()) + sqrt(squared.w());
+}
+
+inline vec4 normalized(const vec4& a) {
+    return a / norm(a);
 }
 
 #endif
