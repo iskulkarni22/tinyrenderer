@@ -4,116 +4,139 @@
 #include <iomanip>
 #include "vec.h"
 
-class matrix2 {
-    public:
-        vec2 data[2];
-
-        matrix2(const vec2& a, const vec2& b) : data{a, b} {}
-
-        matrix2() = default;
-
-        const vec2& operator[](const int i) const { return data[i]; }
-        vec2& operator[](const int i) { return data[i]; }
+template<int rows, int cols> struct matrix {
+    vec<cols> data[rows] = {{}};
+    const vec<cols>& operator[](const int i) const { return data[i]; }
+    vec<cols>& operator[](const int i) { return data[i]; }
 };
 
-inline matrix2 operator+(const matrix2& a, const matrix2& b) {
-    return matrix2{a[0] + b[0], a[1] + b[1]};
-}
+using matrix2 = matrix<2,2>;
+using matrix3 = matrix<3,3>;
+using matrix4 = matrix<4,4>;
 
-inline matrix2 operator-(const matrix2& a, const matrix2& b) {
-    return matrix2{a[0] - b[0], a[1] - b[1]};
-}
-
-class matrix3 {
-    public:
-        vec3 data[3];
-
-        matrix3(const vec3& a, const vec3& b, const vec3& c) : data{a, b, c} {}
-
-        matrix3() = default;
-
-        const vec3& operator[](const int i) const { return data[i]; }
-        vec3& operator[](const int i) { return data[i]; }
-};
-
-inline std::ostream& operator<<(std::ostream& out, const matrix3& m) {
-    for (int i = 0; i < 3; i++) {
-        out << "| " << m[i].x() << std::right << std::setw(5) << m[i].y() << std::right << std::setw(5) << m[i].z() << " |" << "\n";
-    }
+template<int rows, int cols>
+std::ostream& operator<<(std::ostream& out, const matrix<rows,cols>& m) {
+    for (int i = 0; i < rows; i++) out << m[i] << std::endl;
     return out;
 }
 
-inline matrix3 operator+(const matrix3& a, const matrix3& b) {
-   return matrix3{a[0] + b[0], a[1] + b[1], a[2] + b[2]};
-}
-
-inline matrix3 operator-(const matrix3& a, const matrix3& b) {
-    return matrix3{a[0] - b[0], a[1] - b[1], a[2] - b[2]};
-}
-
-inline matrix3 operator*(const matrix3& a, const double b) {
-    matrix3 res;
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            res[i][j] = a[i][j] * b;
-        }
-    }
+template<int rows, int cols>
+matrix<rows,cols> operator+(const matrix<rows,cols>& a, const matrix<rows,cols>& b) {
+    matrix<rows,cols> res;
+    for (int i = 0; i < rows; i++)
+        for (int j = 0; j < cols; j++)
+            res[i][j] = a[i][j] + b[i][j];
     return res;
 }
 
-inline matrix3 operator*(const double b, const matrix3& a) {
+template<int rows, int cols>
+matrix<rows,cols> operator-(const matrix<rows,cols>& a, const matrix<rows,cols>& b) {
+    matrix<rows,cols> res;
+    for (int i = 0; i < rows; i++)
+        for (int j = 0; j < cols; j++)
+            res[i][j] = a[i][j] - b[i][j];
+    return res;
+}
+
+template<int rows, int cols>
+matrix<rows,cols> operator*(const matrix<rows,cols>& a, const double b) {
+    matrix<rows,cols> res;
+    for (int i = 0; i < rows; i++)
+        res[i] = a[i] * b;
+    return res;
+}
+
+template<int rows, int cols>
+matrix<rows,cols> operator*(const double b, const matrix<rows,cols>& a) {
     return a * b;
 }
 
-inline vec3 operator*(const matrix3& a, const vec3& b) {
-    vec3 res;
+template<int rows, int cols>
+vec<cols> operator*(const matrix<rows,cols>& a, const vec<cols> b) {
+    vec<cols> res;
+    for (int i = 0; i < rows; i++)
+        res[i] = a[i].dot(b);
+    return res;
+}
+
+template<int r1, int c1, int c2>
+matrix<r1,c2> operator*(const matrix<r1,c1>& a, const matrix<c1,c2>& b) {
+    matrix<r1,c2> res;
+    for (int i = 0; i < r1; i++)
+        for (int j = 0; j < c2; j++)
+            for (int k = 0; k < c1; k++) res[i][j] += a[i][k] * b[k][j];
+    return res;
+}
+
+template<int rows, int cols>
+matrix<rows,cols> operator/(const matrix<rows,cols>& a, const double b) {
+    matrix<rows,cols> res;
+    for (int i = 0; i < rows; i++)
+        res[i] = a[i] / b;
+    return res;
+}
+
+template<int rows, int cols>
+matrix<rows, cols> transpose(const matrix<rows, cols>& m) {
+    matrix<cols, rows> res;
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
-            res[i] += (a[i][j] * b[j]);
+            res[i][j] = m[j][i];
         }
     }
     return res;
 }
 
+inline double det(const matrix2& m) {
+    double a = m[0].x;
+    double b = m[0].y;
+    double c = m[1].x;
+    double d = m[1].y;
+
+    return a*d - b*c;
+}
+
+inline matrix2 inverse(const matrix2& m) {
+    double a = m[0].x;
+    double b = m[0].y;
+    double c = m[1].x;
+    double d = m[1].y;
+
+    double inv_det = 1 / det(m);
+    matrix2 inv = {{{d, -b}, 
+                    {-c, a}}};
+    return inv_det * inv;
+}
+
 inline double det(const matrix3& m) {
-    double a = m[0].x();
-    double b = m[0].y();
-    double c = m[0].z();
-    double d = m[1].x();
-    double e = m[1].y();
-    double f = m[1].z();
-    double g = m[2].x();
-    double h = m[2].y();
-    double i = m[2].z();
+    double a = m[0].x;
+    double b = m[0].y;
+    double c = m[0].z;
+    double d = m[1].x;
+    double e = m[1].y;
+    double f = m[1].z;
+    double g = m[2].x;
+    double h = m[2].y;
+    double i = m[2].z;
 
     return a*(e*i-f*h) - b*(d*i-f*g) + c*(d*h-e*g);
 }
 
-inline matrix3 transpose(const matrix3& m) {
-    matrix3 res;
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            res[i][j] = m[j][i];            
-        }
-    }
-    return res;
-}
-
 inline matrix3 inverse(const matrix3& m) {
-    double a = m[0].x();
-    double b = m[0].y();
-    double c = m[0].z();
-    double d = m[1].x();
-    double e = m[1].y();
-    double f = m[1].z();
-    double g = m[2].x();
-    double h = m[2].y();
-    double i = m[2].z();
+    double a = m[0].x;
+    double b = m[0].y;
+    double c = m[0].z;
+    double d = m[1].x;
+    double e = m[1].y;
+    double f = m[1].z;
+    double g = m[2].x;
+    double h = m[2].y;
+    double i = m[2].z;
 
     double inv_det = 1 / det(m);
-    matrix3 inv{{e*i-f*h, -(b*i-c*h), (b*f-c*e)},
+    matrix3 inv{{{e*i-f*h, -(b*i-c*h), (b*f-c*e)},
                 {-(d*i-f*g), a*i-c*g, -(a*f-c*d)},
-                {d*h-e*g, -(a*h-b*g), (a*e-b*d)}};
+                {d*h-e*g, -(a*h-b*g), (a*e-b*d)}}};
     return inv_det * inv;
 }
 
@@ -121,77 +144,10 @@ inline matrix3 inverse_transpose(const matrix3& m) {
     return inverse(transpose(m));
 }
 
-class matrix4 {
-    private:
-        vec4 data[4];
-    public:
-        matrix4(const vec4& a, const vec4& b, const vec4& c, const vec4& d) : data{a, b, c, d} {}
-        
-        matrix4() = default;
-
-        operator matrix3() const {
-            matrix3 res;
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
-                    res[i][j] = data[i][j];
-                }
-            }
-            return res;
-        }
-
-        const vec4& operator[](const int i) const { return data[i]; }
-        vec4& operator[](const int i) { return data[i]; }
-};
-
-inline std::ostream& operator<<(std::ostream& out, const matrix4& m) {
-    for (int i = 0; i < 4; i++) {
-        out << "| " << m[i].x() << std::right << std::setw(5) 
-                    << m[i].y() << std::right << std::setw(5) 
-                    << m[i].z() << std::setw(5) << std::right 
-                    << m[i].w() << " |" << "\n";
-    }
-    return out;
-}
-
-inline matrix4 operator+(const matrix4& a, const matrix4& b) {
-   return matrix4{a[0] + b[0], a[1] + b[1], a[2] + b[2], a[3] + b[3]};
-}
-
-inline matrix4 operator-(const matrix4& a, const matrix4& b) {
-    return matrix4{a[0] - b[0], a[1] - b[1], a[2] - b[2], a[3] - b[3]};
-}
-
-inline matrix4 operator*(const matrix4& a, const matrix4& b) {
-    matrix4 res;
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            double sum = 0;
-            for (int k = 0; k < 4; k++) {
-                sum += (a[i][k] * b[k][j]);
-            }
-            res[i][j] = sum;
-        }
-    }
-    return res;
-}
-
-inline vec4 operator*(const matrix4& a, const vec4& b) {
-    vec4 res;
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            res[i] += (a[i][j] * b[j]);
-        }
-    }
-    return res;
-}
-
-inline matrix4 transpose(const matrix4& m) {
-    matrix4 res;
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            res[i][j] = m[j][i];
-        }
-    }
+inline matrix3 to_matrix3(const matrix4& m) {
+    matrix3 res;
+    for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++) res[i][j] = m[i][j];
     return res;
 }
 

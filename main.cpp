@@ -26,7 +26,7 @@ struct RandomShader : IShader {
 
     virtual vec4 vert(const face f, const int v_idx) {
         vertex v = mesh.vertices[f.vertex_idx[v_idx]];
-        vec4 gl_Position = ModelView * vec4(v.x(), v.y(), v.z(), 1);
+        vec4 gl_Position = ModelView * vec4{v.x, v.y, v.z, 1};
         tri[v_idx] = gl_Position.xyz();
         return Perspective * gl_Position;
     }
@@ -36,40 +36,56 @@ struct RandomShader : IShader {
     }
 };
 
+
 struct PhongShader : IShader {
     const model &mesh;
     vec4 light;
+    vec4 tri[3];
     vec2 varying_uv[3];
+    vec3 varying_nrm[3];
 
     PhongShader(const vec3 l, const model& m) : mesh(m) {
-        light = normalized(ModelView * vec4(l.x(), l.y(), l.z(), 0));
+        light = normalized(ModelView * vec4{l.x, l.y, l.z, 0});
     }
 
     virtual vec4 vert(const face f, const int v_idx) {
         vertex v = mesh.vertices[f.vertex_idx[v_idx]];
-        vec4 gl_Position = ModelView * vec4(v.x(), v.y(), v.z(), 1);
+        vec4 gl_Position = ModelView * vec4{v.x, v.y, v.z, 1};
+        tri[v_idx] = gl_Position;
 
         varying_uv[v_idx] = mesh.texcoords[f.vtex_idx[v_idx]];
+        varying_nrm[v_idx] = inverse_transpose(to_matrix3(ModelView)) * mesh.vnormals[f.vnrm_idx[v_idx]];
         
 
         return Perspective * gl_Position;
     }
 
     virtual std::pair<bool, TGAColor> frag(const vec3 bar) const {
+        matrix<2,4> E = {tri[1] - tri[0], tri[2] - tri[0]};
+        matrix<2,2> U = {varying_uv[1] - varying_uv[0], varying_uv[2] - varying_uv[0]};
+        matrix<2,4> T = inverse(U) * E;
+        matrix4 D = {normalized(T[0]),
+                     normalized(T[1]),
+                     normalized(add_dim(bar[0]*varying_nrm[0] + 
+                                        bar[1]*varying_nrm[1] + 
+                                        bar[2]*varying_nrm[2])),
+                     {0,0,0,1}};
+
         vec2 uv = bar[0]*varying_uv[0] + bar[1]*varying_uv[1] + bar[2]*varying_uv[2];
-        vec4 n = vec4(normalized(inverse_transpose(ModelView) * mesh.normal(uv).xyz()), 0);
-        double intensity = 1.5;
+        vec4 n = normalized(transpose(D) * mesh.normal(uv));
+        
+        double intensity = 2.0;
         double ambient = 0.3;
 
         TGAColor gl_FragColor = sample2D(mesh.diffuse_map, uv);
         double diffuse_intensity = 0.5;
         double diffuse = std::max(0., n.dot(light)) * diffuse_intensity;
 
-        double spec_exp = 10;
+        double spec_exp = 3;
         double spec_intensity = 1.;
 
         vec4 r = normalized(2*n*(n.dot(light)) - light);
-        double specular = pow(std::max(0., r.z()), spec_exp) * spec_intensity;
+        double specular = pow(std::max(0., r.z), spec_exp) * spec_intensity;
         specular *= (0.5+2*sample2D(mesh.specular_map, uv)[0]/255.);
         for (int c : {0,1,2}) {
             gl_FragColor[c] = std::min<int>(255, gl_FragColor[c]*(ambient + diffuse + specular)*intensity);
@@ -92,32 +108,35 @@ int main(int argc, char** argv) {
     TGAImage framebuffer(width, height, TGAImage::RGB, {177, 195, 209, 255});
     TGAImage depthImg(width, height, TGAImage::GRAYSCALE);
 
-    const vec3 light(0,0,1);
-    const vec3 eye(-1,0,2);
-    const vec3 center(0,0,0);
-    const vec3 up(0,1,0);
+    const vec3 light{0,0,1};
+    const vec3 eye{-1,0,2};
+    const vec3 center{0,0,0};
+    const vec3 up{0,1,0};
 
     lookat(eye, center, up);
     perspective(norm(eye - center));
     viewport(width/16, height/16, width*7/6, height*7/8);
     init_zbuffer(width, height);
+
     
     std::string filepath = argv[1];
+    for (int m=1; m<argc; m++) {
+        std::string filepath = argv[m];
+        model mesh;
+        mesh.read_obj_file(filepath);
+        PhongShader shader(light, mesh);
+        
+        // draw triangles
+        // iterate over faces
+        for (int i = 0; i < mesh.faces.size(); i++) {
+            face f = mesh.faces[i];
 
-    model mesh;
-    mesh.read_obj_file(filepath);
-    PhongShader shader(light, mesh);
+            Triangle clip;
+            for (int i = 0; i < 3; i++) clip[i] = shader.vert(f, i);
+            // for (int c = 0; c < 3; c++) shader.color[c] = rand() % 255;
 
-    // draw triangles
-    // iterate over faces
-    for (int i = 0; i < mesh.faces.size(); i++) {
-        face f = mesh.faces[i];
-
-        Triangle clip;
-        for (int i = 0; i < 3; i++) clip[i] = shader.vert(f, i);
-        // for (int c = 0; c < 3; c++) shader.color[c] = rand() % 255;
-
-        rasterize(framebuffer, clip, shader);
+            rasterize(framebuffer, clip, shader);
+        }
     }
 
     // convert zbuffer data to depth image 

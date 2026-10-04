@@ -51,17 +51,17 @@ bool model::read_obj_file(std::string filepath) {
         if (type == "v") {
             double x, y, z;
             ss >> x >> y >> z;
-            vertex v(x, y, z);
+            vertex v{x, y, z};
             vertices.push_back(v);
         } else if (type == "vt") {
             double x, y, w;
             ss >> x >> y >> w;
-            vec2 texcoord(x, 1-y);
+            vec2 texcoord{x, 1-y};
             texcoords.push_back(texcoord);
         } else if (type == "vn") {
             double x, y, z;
             ss >> x >> y >> z;
-            vec3 vnrm(x, y, z);
+            vec3 vnrm{x, y, z};
             vnormals.push_back(vnrm);
         } else if (type == "f") {
             int v[3];
@@ -85,7 +85,7 @@ bool model::read_obj_file(std::string filepath) {
 
     read.close();
 
-    normal_map.read_tga_file(filepath.substr(0, filepath.find(".")) + "_nm.tga");
+    normal_map.read_tga_file(filepath.substr(0, filepath.find(".")) + "_nm_tangent.tga");
     diffuse_map.read_tga_file(filepath.substr(0, filepath.find(".")) + "_diff.tga");
     specular_map.read_tga_file(filepath.substr(0, filepath.find(".")) + "_spec.tga");
 
@@ -94,7 +94,7 @@ bool model::read_obj_file(std::string filepath) {
 
 vec4 model::normal(const vec2& uv) const {
     TGAColor c = normal_map.get(uv[0] * normal_map.width(), uv[1] * normal_map.height());
-    return vec4((double)c[2], (double)c[1], (double)c[0], 0)*2./255. - vec4(1,1,1,0);
+    return normalized(vec4{(double)c[2], (double)c[1], (double)c[0], 0}*2./255. - vec4{1,1,1,0});
 }
 
 

@@ -5,206 +5,124 @@
 #include <math.h>
 
 
-class vec2 {
-    private:
-        double data[2] = {0., 0.};
-    public:
-        vec2(double x, double y) : data{x, y} {}
-
-        vec2() = default;
-
-        double operator[](const int i) const { return data[i]; }
-        double& operator[](const int i) { return data[i]; }
-        
-        double x() const { return data[0]; }
-        double y() const { return data[1]; }
-
-        const double length() const {
-            return sqrt(x()*x() + y()*y());
-        }
-
-        const double dot(const vec2& other) const {
-            return x() * other.x() + y() * other.y();
-        }
+template<int dims> struct vec {
+    double data[dims] = {0};
+    double operator[](const int i) const { return data[i]; }
+    double& operator[](const int i) { return data[i]; }
 };
 
-inline std::ostream& operator<<(std::ostream& out, const vec2& a) {
-    out << '<' << a.x() << ", " << a.y() << '>';
-    return out;
-}
+template<> struct vec<2> {
+    double x = 0, y = 0;
+    double operator[](const int i) const { return i ? y : x; }
+    double& operator[](const int i) { return i ? y : x; }
 
-inline vec2 operator+(const vec2& a, const vec2& b) {
-    return vec2(a.x() + b.x(), a.y() + b.y());
-}
-
-inline vec2 operator-(const vec2& a, const vec2& b) {
-    return vec2(a.x() - b.x(), a.y() - b.y());
-}
-
-inline vec2 operator*(const vec2& a, const vec2& b) {
-    return vec2(a.x() * b.x(), a.y() * b.y());
-}
-
-inline vec2 operator*(const vec2& a, const double b) {
-    return vec2(a.x() * b, a.y() * b);
-}
-
-inline vec2 operator*(const double b, const vec2& a) {
-    return a * b;
-}
-
-inline vec2 operator/(const vec2& a, const vec2& b) {
-    return vec2(a.x() / b.x(), a.y() / b.y());
-}
-
-
-class vec3 {
-    private:
-        double data[3] = {0., 0., 0.};
-    public:        
-        vec3(double x, double y, double z) : data{x,y,z} {}
-        vec3(double x, double y) : vec3(x, y, 0) {}
-
-        vec3() = default;
-
-        double operator[](const int i) const { return data[i]; }
-        double& operator[](const int i) { return data[i]; }
-
-        double x() const { return data[0]; }
-        double y() const { return data[1]; }
-        double z() const { return data[2]; }
-
-        const double length() const {
-            return sqrt(x()*x() + y()*y() + z()*z());
-        }
-
-        const double dot(const vec3& other) const {
-            return x() * other.x() + y() * other.y() + z() * other.z();
-        }
-
-        const vec3 cross(const vec3& other) const {
-            return vec3(y()*other.z() - z()*other.y(),
-                        z()*other.x() - x()*other.z(),
-                        x()*other.y() - y()*other.x());
-        }
+    inline double dot(const vec<2> other) const {
+        return x*other.x + y*other.y;
+    }
 };
 
-inline std::ostream& operator<<(std::ostream& out, const vec3& a) {
-    out << '<' << a.x() << ", " << a.y() << ", " << a.z() << '>';
-    return out;
-}
+template<> struct vec<3> {
+    double x = 0, y = 0, z = 0;
+    double operator[](const int i) const { return i ? (i==2 ? z : y) : x; }
+    double& operator[](const int i) { return i ? (i==2 ? z : y) : x; }
 
-inline vec3 operator+(const vec3& a, const vec3& b) {
-    return vec3(a.x() + b.x(), a.y() + b.y(), a.z() + b.z());
-}
+    inline double dot(const vec<3> other) const {
+        return x*other.x + y*other.y + z*other.z;
+    }
 
-inline vec3 operator-(const vec3& a, const vec3& b) {
-    return vec3(a.x() - b.x(), a.y() - b.y(), a.z() - b.z());
-}
+    inline vec<3> cross(const vec<3>& other) const {
+        return {y*other.z - z*other.y,
+                z*other.x - x*other.z,
+                x*other.y - y*other.x};
+    }
+};
 
-inline vec3 operator*(const vec3& a, const vec3& b) {
-    return vec3(a.x() * b.x(), a.y() * b.y(), a.z() * b.z());
-}
+template<> struct vec<4> {
+    double x = 0, y = 0, z = 0, w = 0;
+    double operator[](const int i) const { return i<2 ? (i ? y : x) : (i==2 ? z : w); }
+    double& operator[](const int i) { return i<2 ? (i ? y : x) : (i==2 ? z : w); }
+    vec<2> xy() const { return {x, y}; }
+    vec<3> xyz() const { return {x, y, z}; }
 
-inline vec3 operator*(const vec3& a, double b) {
-    return vec3(a.x() * b, a.y() * b, a.z() * b);
-}
+    inline double dot(const vec<4> other) const {
+        return x*other.x + y*other.y + z*other.z + w*other.w;
+    }
+};
 
-
-inline vec3 operator*(double b, const vec3& a) {
-    return a * b;
-}
-
-inline vec3 operator/(const vec3& a, const vec3& b) {
-    return vec3(a.x() / b.x(), a.y() / b.y(), a.z() / b.z());
-}
-
-inline vec3 operator/(const vec3& a, double b) {
-    return a * (1/b);
-}
-
-inline double norm(const vec3& a) {
-    vec3 squared = a*a;
-    return sqrt(squared.x()) + sqrt(squared.y()) + sqrt(squared.z());
-}
-
-inline vec3 normalized(const vec3& a) {
-    return a / norm(a);
-}
-
+using vec2 = vec<2>;
+using vec3 = vec<3>;
+using vec4 = vec<4>;
 using vertex = vec3;
 
-
-class vec4 {
-    private:
-        double data[4] = {0., 0., 0., 0.};
-    public:
-        vec4(double x, double y, double z, double w) : data{x,y,z,w} {}
-
-        vec4(const vec3& v, double w) : data{v.x(), v.y(), v.z(), w} {}
-
-        vec4() = default;
-
-        double operator[](const int i) const { return data[i]; }
-        double& operator[](const int i) { return data[i]; }
-
-        double x() const { return data[0]; }
-        double y() const { return data[1]; }
-        double z() const { return data[2]; }
-        double w() const { return data[3]; }
-
-        const vec2 xy() const { return vec2(x(), y()); }
-        const vec3 xyz() const { return vec3(x(), y(), z()); }
-
-        const double length() const {
-            return sqrt(x()*x() + y()*y() + z()*z());
-        }
-
-        const double dot(const vec4& other) const {
-            return x() * other.x() + y() * other.y() + z() * other.z() + w() * other.w();
-        }
-};
-
-inline std::ostream& operator<<(std::ostream& out, const vec4& a) {
-    out << '<' << a.x() << ", " << a.y() << ", " << a.z() << ", " << a.w() << '>';
-    return out;
+template<int n>
+std::ostream& operator<<(std::ostream& out, const vec<n> & v) {
+    out << "<";
+    for (int i = 0; i < n; i++) out << v[i] << " ";
+    out << ">";
 }
 
-inline vec4 operator+(const vec4& a, const vec4& b) {
-    return vec4(a.x() + b.x(), a.y() + b.y(), a.z() + b.z(), a.w() + b.w());
+template<int n>
+vec<n> operator+(const vec<n>& a, const vec<n>& b) {
+    vec<n> res;
+    for (int i = 0; i < n; i++) res[i] = a[i] + b[i];
+    return res;
 }
 
-inline vec4 operator-(const vec4& a, const vec4& b) {
-    return vec4(a.x() - b.x(), a.y() - b.y(), a.z() - b.z(), a.w() - b.w());
+template<int n>
+vec<n> operator-(const vec<n>& a, const vec<n>& b) {
+    vec<n> res;
+    for (int i = 0; i < n; i++) res[i] = a[i] - b[i];
+    return res;
 }
 
-inline vec4 operator*(const vec4& a, const vec4& b) {
-    return vec4(a.x() * b.x(), a.y() * b.y(), a.z() * b.z(), a.w() * b.w());
+template<int n>
+vec<n> operator*(const vec<n>& a, const vec<n>& b) {
+    vec<n> res;
+    for (int i = 0; i < n; i++) res[i] = a[i] * b[i];
+    return res;
 }
 
-inline vec4 operator*(const vec4& a, const double b) {
-    return vec4(a.x() * b, a.y() * b, a.z() * b, a.w() * b);
+template<int n>
+vec<n> operator/(const vec<n>& a, const vec<n>& b) {
+    vec<n> res;
+    for (int i = 0; i < n; i++) res[i] = a[i] / b[i];
+    return res;
 }
 
-inline vec4 operator*(const double b, const vec4& a) {
+template<int n>
+vec<n> operator*(const vec<n>& a, const double b) {
+    vec<n> res;
+    for (int i = 0; i < n; i++) res[i] = a[i] * b;
+    return res;
+}
+
+template<int n>
+vec<n> operator*(const double b, const vec<n>& a) {
     return a * b;
 }
 
-inline vec4 operator/(const vec4& a, const vec4& b) {
-    return vec4(a.x() / b.x(), a.y() / b.y(), a.z() / b.z(), a.w() / b.w());
+template<int n>
+vec<n> operator/(const vec<n>& a, const double b) {
+    vec<n> res;
+    for (int i = 0; i < n; i++) res[i] = a[i] / b;
+    return res;
 }
 
-inline vec4 operator/(const vec4& a, double b) {
-    return a * (1/b);
+template<int n>
+double norm(const vec<n>& a) {
+    double res = 0.;
+    for (int i = 0; i < n; i++) res += sqrt(a[i]*a[i]);
+    return res;
 }
 
-inline double norm(const vec4& a) {
-    vec4 squared = a*a;
-    return sqrt(squared.x()) + sqrt(squared.y()) + sqrt(squared.z()) + sqrt(squared.w());
-}
-
-inline vec4 normalized(const vec4& a) {
+template<int n>
+vec<n> normalized(const vec<n>& a) {
     return a / norm(a);
+}
+
+template<int n>
+vec<n+1> add_dim(const vec<n>& a) {
+    return {a.x, a.y, a.z, 0};
 }
 
 #endif
