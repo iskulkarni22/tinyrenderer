@@ -4,5 +4,5 @@
 <div align="center">
 <img width="799" height="791" alt="Screenshot 2026-10-05 at 1 19 17 PM" src="https://github.com/user-attachments/assets/9dd374af-4509-44ee-bf4d-86c8391220ae" />
   <br>
-<em style="text-align: center;">Example image rendered using tinyrenderer with diffuse, specular, and normal tangent maps. <br> Modeled in Maya and textured in Substance Painter.</em>
+<em style="text-align: center;">Example image rendered using tinyrenderer with diffuse, specular, and normal tangent texture maps. <br> Modeled in Maya and textured in Substance Painter.</em>
 </div>
